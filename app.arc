@@ -2,7 +2,7 @@
 cv-web-3c6e
 
 @aws
-region eu-west-2
+region us-east-1
 
 @http
 /*
