@@ -1,8 +1,8 @@
 @app
-remix-test-d2b4
+cv-web-3c6e
 
 @aws
-region us-east-1
+region eu-west-2
 
 @http
 /*

@@ -1,15 +1,10 @@
 name: 🚀 Deploy
-
 on:
   push:
     branches:
       - main
       - dev
-  pull_request:
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  pull_request: {}
 
 permissions:
   actions: write
@@ -24,18 +19,21 @@ jobs:
     name: ⬣ ESLint
     runs-on: ubuntu-latest
     steps:
+      - name: 🛑 Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.11.0
+
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v3
 
       - name: ⎔ Setup node
         uses: actions/setup-node@v3
         with:
-          cache: npm
-          cache-dependency-path: ./package.json
-          node-version: 18
+          node-version: 14
 
-      - name: 📥 Install deps
-        run: npm install
+      - name: 📥 Download deps
+        uses: bahmutov/npm-install@v1
+        with:
+          useLockFile: false
 
       - name: 🔬 Lint
         run: npm run lint
@@ -44,18 +42,21 @@ jobs:
     name: ʦ TypeScript
     runs-on: ubuntu-latest
     steps:
+      - name: 🛑 Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.11.0
+
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v3
 
       - name: ⎔ Setup node
         uses: actions/setup-node@v3
         with:
-          cache: npm
-          cache-dependency-path: ./package.json
-          node-version: 18
+          node-version: 14
 
-      - name: 📥 Install deps
-        run: npm install
+      - name: 📥 Download deps
+        uses: bahmutov/npm-install@v1
+        with:
+          useLockFile: false
 
       - name: 🔎 Type check
         run: npm run typecheck --if-present
@@ -64,68 +65,40 @@ jobs:
     name: ⚡ Vitest
     runs-on: ubuntu-latest
     steps:
+      - name: 🛑 Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.11.0
+
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v3
 
       - name: ⎔ Setup node
         uses: actions/setup-node@v3
         with:
-          cache: npm
-          cache-dependency-path: ./package.json
-          node-version: 18
+          node-version: 14
 
-      - name: 📥 Install deps
-        run: npm install
+      - name: 📥 Download deps
+        uses: bahmutov/npm-install@v1
+        with:
+          useLockFile: false
 
       - name: ⚡ Run vitest
         run: npm run test -- --coverage
 
-  # cypress:
-  #   name: ⚫️ Cypress
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: ⬇️ Checkout repo
-  #       uses: actions/checkout@v3
-
-  #     - name: 🏄 Copy test env vars
-  #       run: cp .env.example .env
-
-  #     - name: ⎔ Setup node
-  #       uses: actions/setup-node@v3
-  #       with:
-  #         cache: npm
-  #         cache-dependency-path: ./package.json
-  #         node-version: 18
-
-  #     - name: 📥 Install deps
-  #       run: npm install
-
-  #     - name: 🏗 Build
-  #       run: npm run build
-
-  #     - name: 🌳 Cypress run
-  #       uses: cypress-io/github-action@v5
-  #       with:
-  #         start: npm run dev
-  #         wait-on: "http://localhost:8811"
-  #       env:
-  #         PORT: "8811"
-
   deploy:
-    #needs: [lint, typecheck, vitest, cypress]
-    needs: [lint, typecheck, vitest]
+    needs: [lint, vitest]
     runs-on: ubuntu-latest
 
     steps:
+      - name: 🛑 Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.11.0
+
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v3
 
       - name: ⎔ Setup node
         uses: actions/setup-node@v3
         with:
-          cache: npm
-          cache-dependency-path: ./package.json
-          node-version: 18
+          node-version: 18.13.0
 
       - name: 👀 Env
         run: |
@@ -136,8 +109,10 @@ jobs:
           VER=`node --version`; echo "Node ver:   $VER"
           VER=`npm --version`; echo "npm ver:    $VER"
 
-      - name: 📥 Install deps
-        run: npm install
+      - name: 📥 Download deps
+        uses: bahmutov/npm-install@v1
+        with:
+          install-command: yarn --frozen-lockfile --silent
 
       - name: Create .env
         run: |
@@ -146,10 +121,10 @@ jobs:
           echo SESSION_SECRET=${{ secrets.SESSION_SECRET }} >> .env
 
       - name: 🏗 Build
-        run: npm run build
+        run: yarn build
 
       - name: 🛠 Install Arc
-        run: npm i -g @architect/architect
+        run: yarn global add @architect/architect
 
       - name: 🚀 Staging Deploy
         if: github.ref == 'refs/heads/dev'
@@ -164,5 +139,15 @@ jobs:
         run: arc deploy --production --prune
         env:
           CI: true
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          REACT_APP_API_KEY: ${{ secrets.REACT_APP_API_KEY }}
+
+      - name: Invalidate CloudFront
+        uses: chetan/invalidate-cloudfront-action@v2
+        env:
+          DISTRIBUTION: ${{ secrets.DISTRIBUTION }}
+          PATHS: "/*"
+          AWS_REGION: "eu-west-2"
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
