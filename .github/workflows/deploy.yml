@@ -100,6 +100,12 @@ jobs:
         with:
           node-version: 18.13.0
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_SERVICE_ROLE_PROD }}
+          aws-region: us-east-1
+
       - name: 👀 Env
         run: |
           echo "Event name: ${{ github.event_name }}"
@@ -139,8 +145,8 @@ jobs:
         run: arc deploy --production --prune
         env:
           CI: true
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          # AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          # AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           # REACT_APP_API_KEY: ${{ secrets.REACT_APP_API_KEY }}
 
       # - name: Invalidate CloudFront
