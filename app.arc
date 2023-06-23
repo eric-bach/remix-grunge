@@ -1,8 +1,5 @@
 @app
-cv-web-3c6e
-
-@aws
-region us-east-1
+remix-grunge
 
 @http
 /*
@@ -11,13 +8,7 @@ region us-east-1
 
 @static
 
-@tables
-user
-  pk *String
-
-password
-  pk *String # userId
-
-note
-  pk *String  # userId
-  sk **String # noteId
+@aws
+# profile default
+region us-east-1
+  
