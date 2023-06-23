@@ -87,6 +87,10 @@ jobs:
   deploy:
     #needs: [lint, vitest]
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+      id-token: write
 
     steps:
       - name: 🛑 Cancel Previous Runs
