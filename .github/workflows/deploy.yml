@@ -125,12 +125,6 @@ jobs:
         with:
           install-command: yarn --frozen-lockfile --silent
 
-      # - name: Create .env
-      #   run: |
-      #     touch .env
-      #     echo NODE_ENV=${{ secrets.NODE_ENV }} >> .env
-      #     echo SESSION_SECRET=${{ secrets.SESSION_SECRET }} >> .env
-
       - name: 🏗 Build
         run: yarn build
 
