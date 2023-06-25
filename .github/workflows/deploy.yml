@@ -84,7 +84,8 @@ jobs:
   #     - name: ⚡ Run vitest
   #       run: npm run test -- --coverage
 
-  deploy:
+  deploy-dev:
+    name: Deploy Dev
     #needs: [lint, vitest]
     runs-on: ubuntu-latest
     permissions:
@@ -107,7 +108,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: ${{ secrets.AWS_SERVICE_ROLE_PROD }}
+          role-to-assume: ${{ secrets.AWS_SERVICE_ROLE_DEV }}
           aws-region: us-east-1
 
       - name: 👀 Env
@@ -136,13 +137,13 @@ jobs:
       - name: 🛠 Install Arc
         run: yarn global add @architect/architect
 
-      - name: 🚀 Staging Deploy
-        if: github.ref == 'refs/heads/dev'
-        run: arc deploy --staging --prune
-        env:
-          CI: true
+      # - name: 🚀 Staging Deploy
+      #   if: github.ref == 'refs/heads/dev'
+      #   run: arc deploy --staging --prune
+      #   env:
+      #     CI: true
 
-      - name: 🚀 Production Deploy
+      - name: 🚀 Deploy
         if: github.ref == 'refs/heads/main'
         run: arc deploy --production --prune
         env:
